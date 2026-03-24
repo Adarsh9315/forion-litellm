@@ -1,0 +1,36 @@
+# ============================================================
+# Example: FORION-aware LiteLLM proxy config
+#
+# Copy the relevant sections into your existing proxy config.
+# The forion: block is entirely optional — remove it to disable.
+# ============================================================
+
+model_list:
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+
+# ---- FORION extension (optional) ----
+forion:
+  enabled: true
+  default_product: "ide"
+  model_mapping:
+    ide:
+      default: "gpt-4o-mini"       # fast models for interactive use
+      fallback: ["gpt-4o"]
+    spark:
+      default: "gpt-4o"            # balanced for agent execution
+      fallback: ["claude-3-5-sonnet"]
+    orbit:
+      default: "gpt-4o-mini"       # cost-efficient for long-running workflows
+      fallback: ["gpt-4o-mini"]
+
+# Register the FORION callback
+litellm_settings:
+  callbacks: ["litellm.proxy.forion.hooks.ForionCustomLogger"]
