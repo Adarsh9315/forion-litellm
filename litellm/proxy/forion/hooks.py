@@ -178,6 +178,32 @@ class ForionCustomLogger(CustomLogger):
     # Post-call: build response metadata, enhanced logging, hooks
     # ------------------------------------------------------------------
 
+    async def async_post_call_success_hook(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Override of CustomLogger base method.
+        LiteLLM calls this after every successful response.
+        We delegate to async_log_success_event which handles Forion-specific logging.
+        Base class version has a signature mismatch in some LiteLLM versions that
+        causes 'missing argument: self' — overriding here fixes that.
+        """
+        # Extract standard positional/keyword args LiteLLM may pass
+        kwargs_data: Dict[str, Any] = kwargs.get("kwargs", args[0] if args else {})
+        response_obj = kwargs.get("response_obj", args[1] if len(args) > 1 else None)
+        start_time = kwargs.get("start_time", args[2] if len(args) > 2 else None)
+        end_time = kwargs.get("end_time", args[3] if len(args) > 3 else None)
+
+        if response_obj is not None:
+            await self.async_log_success_event(
+                kwargs=kwargs_data,
+                response_obj=response_obj,
+                start_time=start_time,
+                end_time=end_time,
+            )
+
     async def async_log_success_event(
         self,
         kwargs: Dict[str, Any],
